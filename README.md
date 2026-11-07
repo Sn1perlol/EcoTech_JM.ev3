@@ -1,21 +1,28 @@
 # ecotech_poos
 
-Este proyecto se trata sobre las actividades en clase que se realizan en POOS, su objetivo principal es documentar el progreso y las actividades realizadas en el mismo modulo
+El sistema permite:
+
+- **Empleados**: alta, baja, modificación, búsqueda y listado.
+- **Departamentos**: gestión y asignación de empleados.
+- **Proyectos**: creación, asignación de empleados y seguimiento.
+- **Registros de tiempo**: horas trabajadas por tarea y cálculo de costos.
+
+Soporta persistencia en **SQLite** o **MySQL**, configurable mediante variables de entorno.
 
 ## Requisitos previos
 
-* Python 3.12 instalado en tu equipo.
-* Visual Studio Code.
+- Python 3.12 o superior.
+- Visual Studio Code (recomendado).
+- MySQL 8+ (solo si usas `DB_ENGINE=mysql`).
 
-## Instalación y Configuración
+### 1. Clonar el repositorio
 
-1. Clonar el repositorio:
 bash
 git clone <url-del-repositorio>
-cd <nombre-del-repositorio>
+cd ecotech_poos
 
 
-2. Crear y activar el entorno virtual:
+### 2. Crear y activar el entorno virtual:
 En Windows:
 bash
 python -m venv .venv
@@ -26,6 +33,11 @@ En macOS / Linux:
 bash
 python3 -m venv .venv
 source .venv/bin/activate
+
+### 3. Instalar dependencias
+
+bash
+pip install -r requirements.txt
 
 
 3. Configurar las variables de entorno:
@@ -41,3 +53,18 @@ Para ejecutar el proyecto, asegúrate de tener el entorno virtual activado y cor
 bash
 python main.py
 
+## Arquitectura
+
+El proyecto sigue una arquitectura en capas:
+
+1. **Dominio** (`dominio/`): entidades puras del negocio, sin dependencias externas.
+2. **Persistencia** (`persistencia/`): DAOs que traducen entre objetos y la base de datos.
+3. **Presentación** (`menus/`): interfaz de consola que orquesta las operaciones.
+
+## Autor
+
+- Juan Pablo Miranda y Benjamin Espinosa
+
+## Licencia
+
+Proyecto académico 

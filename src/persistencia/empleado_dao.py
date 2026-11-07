@@ -1,136 +1,114 @@
-from persistencia.conexion import abrir_conexion, obtener_motor, marcador_sql
+from persistencia.conexion import abrir_conexion, marcador_sql
 from dominio.empleado import Empleado
 
+
 class EmpleadoDAO:
+
+    @staticmethod
+    def _fila_a_empleado(fila):
+        return Empleado(
+            id=fila[0], nombre=fila[1], direccion=fila[2], numero=fila[3],
+            correo=fila[4], fecha_contrato=fila[5], salario=fila[6], cargo=fila[7]
+        )
+
     @staticmethod
     def insertar(empleado):
-        conexion = abrir_conexion()
-        cursor = conexion.cursor()
-        marcador = "?" if obtener_motor() == "sqlite" else "%s"
+        conexion = None
+        try:
+            conexion = abrir_conexion()
+            cursor = conexion.cursor()
+            marca = marcador_sql()
+            sql = ("INSERT INTO empleado "
+                   "(nombre, direccion, numero, correo, fecha_contrato, salario, cargo) "
+                   f"VALUES ({marca}, {marca}, {marca}, {marca}, {marca}, {marca}, {marca})")
+            cursor.execute(sql, (empleado._nombre, empleado._direccion, empleado._numero,
+                                 empleado._correo, empleado._fecha_contrato,
+                                 empleado._salario, empleado._cargo))
+            conexion.commit()
+            empleado._id = cursor.lastrowid
+            return empleado
+        except Exception:
+            if conexion:
+                conexion.rollback()
+            raise
+        finally:
+            if conexion:
+                conexion.close()
 
-        sql = f"""
-            INSERT INTO empleado (nombre, correo)
-            VALUES ({marcador}, {marcador})
-        """
-
-
-        cursor.execute(sql, (empleado._nombre, empleado._correo))
-        empleado._id = cursor.lastrowid
-        conexion.commit()
-        conexion.close()
-        return empleado
-    
     @staticmethod
     def actualizar(empleado):
         conexion = None
         try:
-            
             conexion = abrir_conexion()
             cursor = conexion.cursor()
-
             marca = marcador_sql()
-            sql = (
-                "UPDATE empleado"
-                f"""SET nombre = {marca}, correo = {marca}, direccion = {marca},
-                    numero_telefono = {marca}, fecha_contrato = {marca}, sueldo = {marca},
-                    rol = {marca}"""
-                f"WHERE id = {marca}"
-            )
-
-            cursor.execute(
-                sql,
-                (
-                    empleado.nombre,
-                    empleado.correo,
-                    empleado.direccion,
-                    empleado.numero_telefono,
-                    empleado.fecha_contrato,
-                    empleado.sueldo,
-                    empleado.rol,
-                    empleado.id
-                )
-            )
-
+            sql = ("UPDATE empleado SET "
+                   f"nombre = {marca}, direccion = {marca}, numero = {marca}, "
+                   f"correo = {marca}, fecha_contrato = {marca}, "
+                   f"salario = {marca}, cargo = {marca} WHERE id = {marca}")
+            cursor.execute(sql, (empleado._nombre, empleado._direccion, empleado._numero,
+                                 empleado._correo, empleado._fecha_contrato,
+                                 empleado._salario, empleado._cargo, empleado._id))
+            actualizado = cursor.rowcount > 0
             conexion.commit()
-            return cursor.rowcount > 0
+            return actualizado
         except Exception:
             if conexion:
                 conexion.rollback()
-                raise
+            raise
         finally:
             if conexion:
                 conexion.close()
 
     @staticmethod
     def eliminar(id_empleado):
-        conexion = abrir_conexion()
-        cursor = conexion.cursor()
-
-        marca = marcador_sql()
-        sql = (
-            "DELETE FROM empleado "
-            f"WHERE id = {marca}"
-        )
-
-        cursor.execute(sql, (id_empleado,))
-        conexion.commit()
-
-        eliminado = cursor.rowcount > 0
-
-        conexion.close()
-        return eliminado
+        conexion = None
+        try:
+            conexion = abrir_conexion()
+            cursor = conexion.cursor()
+            marca = marcador_sql()
+            cursor.execute(f"DELETE FROM empleado WHERE id = {marca}", (id_empleado,))
+            eliminado = cursor.rowcount > 0
+            conexion.commit()
+            return eliminado
+        except Exception:
+            if conexion:
+                conexion.rollback()
+            raise
+        finally:
+            if conexion:
+                conexion.close()
 
     @staticmethod
-    def buscar_por_id(id):
-        conexion = abrir_conexi00on()
-        cursor = conexion.cursor()
-
-        marca = marcador_sql()
-        sql = f"""
-                SELECT id, nombre, correo, direccion, numero_telefono,
-                fecha_contrato, sueldo, rol
-                FROM empleado WHERE id = {marca}
-            """
-        
-        cursor.execute(sql, (id,))
-        fila = cursor.fetchone()
-        conexion.close()
-
-        if fila is None:
-            return None
-        return EmpleadoDAO._fila_a_empleado(fila)
-
+    def buscar_por_id(id_empleado):
+        conexion = None
+        try:
+            conexion = abrir_conexion()
+            cursor = conexion.cursor()
+            marca = marcador_sql()
+            sql = ("SELECT id, nombre, direccion, numero, correo, "
+                   "fecha_contrato, salario, cargo "
+                   f"FROM empleado WHERE id = {marca}")
+            cursor.execute(sql, (id_empleado,))
+            fila = cursor.fetchone()
+            if fila is None:
+                return None
+            return EmpleadoDAO._fila_a_empleado(fila)
+        finally:
+            if conexion:
+                conexion.close()
 
     @staticmethod
     def listar():
-        conexion = abrir_conexion()
-        cursor = conexion.cursor()
-
-        cursor.execute(
-            """
-                SELECT id, nombre, correo, direccion, numero_telefono,
-                fecha_contrato, sueldo, rol
-                FROM empleado
-            """
-        )
-        filas = cursor.fetchall()
-        conexion.close()
-
-        empleados = []
-
-        for fila in filas:
-            empleados.append(EmpleadoDAO._fila_a_empleado(fila))
-        return empleados
-    
-    @staticmethod
-    def _fila_a_empleado(fila):
-        return Empleado(
-            id=fila[0],
-            nombre=fila[1],
-            correo=fila[2], 
-            direccion="calle hurtado 2026",
-            numero_telefono=973382653,
-            fecha_contrato="09 de mayo del 2021",
-            sueldo=389000.94,
-            rol=2
-        )
+        conexion = None
+        try:
+            conexion = abrir_conexion()
+            cursor = conexion.cursor()
+            cursor.execute(
+                "SELECT id, nombre, direccion, numero, correo, "
+                "fecha_contrato, salario, cargo FROM empleado"
+            )
+            return [EmpleadoDAO._fila_a_empleado(f) for f in cursor.fetchall()]
+        finally:
+            if conexion:
+                conexion.close()

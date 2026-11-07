@@ -1,46 +1,82 @@
-from typing import List
 from dominio.empleado import Empleado
 from dominio.proyecto import Proyecto
-from datetime import date
+
 
 class Departamento:
-    def __init__(self, id_departamento: int, nombre_dep: str, id_gerente: str):
-        self._idDepartamento = id_departamento
-        self._nombreDep = nombre_dep
-        self._idGerente = id_gerente
-        
-        # Relaciones PERTENECE (0..*) y creación de proyectos
-        self._empleados: List[Empleado] = []
-        self._proyectos: List[Proyecto] = []
+    def __init__(self, nombre, descripcion="", gerente=None, id_departamento=None):
+        self._id_departamento = id_departamento
+        self._nombre = nombre
+        self._descripcion = descripcion
+        self._gerente = gerente
+        self._empleados = []
+        self._proyectos = []
+        self.validar()
 
-    # Métodos del UML
-    def agregarEmpleado(self, empleado: Empleado) -> str:
+    def validar(self):
+        if not self._nombre or not self._nombre.strip():
+            raise ValueError("El nombre del departamento no puede estar vacío")
+
+    def actualizar_datos(self, nombre=None, correo=None):
+        if nombre is not None:
+            self._nombre = nombre
+        self.validar()
+
+    def asignar_gerente(self, gerente: Empleado):
+        if gerente is not None and not isinstance(gerente, Empleado):
+            return False
+        self._gerente = gerente
+        return True
+
+    def contratar_empleado(self, empleado: Empleado, encargado: Empleado) -> bool:
+        if empleado is None or encargado is None:
+            return False
+        if encargado._cargo != "Recursos Humanos":
+            return False
+        if empleado in self._empleados:
+            return False
         self._empleados.append(empleado)
-        return f"Empleado {empleado._nombre} agregado al departamento '{self._nombreDep}'."
+        empleado.cambiar_departamento(self)
+        return True
 
-    def eliminarEmpleado(self, empleado: Empleado) -> str:
+    def agregar_empleado(self, empleado: Empleado) -> bool:
+        if empleado is None or empleado in self._empleados:
+            return False
+        self._empleados.append(empleado)
+        empleado.cambiar_departamento(self)
+        return True
+
+    def eliminar_empleado(self, empleado: Empleado) -> None:
         if empleado in self._empleados:
             self._empleados.remove(empleado)
-            return f"Empleado {empleado._nombre} eliminado del departamento '{self._nombreDep}'."
-        return f"Empleado {empleado._nombre} no encontrado en el departamento."
+            empleado.cambiar_departamento(None)
 
-    def creacionProyecto(self, nombre: str) -> str:
-        """Crea un nuevo proyecto y lo añade a la lista del departamento."""
-        nuevo_id = len(self._proyectos) + 1
-        nuevo_proyecto = Proyecto(nuevo_id, nombre, date.today(), "Creado desde el Departamento")
-        self._proyectos.append(nuevo_proyecto)
-        return f"Proyecto '{nombre}' creado exitosamente en el departamento '{self._nombreDep}'."
+    def crear_proyecto(self, proyecto: Proyecto) -> bool:
+        if proyecto is None or proyecto in self._proyectos:
+            return False
+        self._proyectos.append(proyecto)
+        return True
 
-    def editarProyecto(self, proyecto: Proyecto) -> str:
-        if proyecto in self._proyectos:
-            return f"Proyecto '{proyecto._nombre}' editado exitosamente."
-        return "Proyecto no encontrado en este departamento."
+    def editar_proyecto(self, proyecto, nuevo_nombre: str) -> bool:
+        if proyecto not in self._proyectos:
+            return False
+        if not nuevo_nombre or not nuevo_nombre.strip():
+            return False
+        proyecto._nombre = nuevo_nombre
+        return True
 
-    def eliminarProyecto(self, proyecto: Proyecto) -> str:
-        if proyecto in self._proyectos:
-            self._proyectos.remove(proyecto)
-            return f"Proyecto '{proyecto._nombre}' eliminado exitosamente."
-        return "Proyecto no encontrado en este departamento."
+    def eliminar_proyecto(self, proyecto) -> bool:
+        if proyecto not in self._proyectos:
+            return False
+        self._proyectos.remove(proyecto)
+        return True
+
+    @property
+    def empleados(self):
+        return tuple(self._empleados)
+
+    def cantidad_empleados(self) -> int:
+        return len(self._empleados)
 
     def __str__(self):
-        return f"Departamento: {self._nombreDep} (Gerente ID: {self._idGerente})"
+        return (f"Departamento(id={self._id_departamento}, nombre='{self._nombre}', "
+                f"descripcion='{self._descripcion}')")
