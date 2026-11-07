@@ -1,14 +1,16 @@
 import getpass
 
-from emtradas import pedir_dato
-from servicios.autenticacion import registrar_usuario
+from entradas import pedir_dato
+from servicios.autenticacion import registrar_usuario, autenticar
+from servicios.api import mostrar_indicador
 from dominio.usuario import Usuario
+
 
 def solicitar_registro():
     try:
         empleado_id = pedir_dato("ID del empleado: ", int)
         nombre = pedir_dato("Nuevo usuario: ", Usuario.normalizar_usuario)
-        clave = pedir_dato("Contraseña: ", Usuario.validar_clave, getpass)
+        clave = getpass("Contraseña: ")  # <-- CORREGIDO AQUÍ
 
         if clave != getpass("Repita la contraseña: "):
             print("Las contraseñas no coinciden. Vuelva al registro.")
@@ -21,7 +23,6 @@ def solicitar_registro():
     print(f"Cuenta creada correctamente. ID: {usuario_id}")
     return usuario_id
 
-from getpass import getpass
 
 def solicitar_login():
     nombre = input("Usuario: ")
@@ -37,18 +38,26 @@ def solicitar_login():
         print("Sesión iniciada correctamente.")
     return usuario
 
+
 def mostrar_perfil(usuario_actual):
-if usuario_actual is None:
+    if usuario_actual is None:
         print("Inicie sesión para ver el perfil.")
         return
     print(f"Usuario: {usuario_actual['nombre_usuario']}")
     print(f"Empleado: {usuario_actual['empleado_id']}")
 
-    def consultar_indicador(usuario_actual):
+
+def consultar_indicador(usuario_actual):
     if usuario_actual is None:
         print("Inicie sesión para consultar indicadores.")
         return
-    mostrar_indicador() # Consulta de la clase 2.
+    from servicios.api import obtener_datos
+    try:
+        datos, origen = obtener_datos()
+        mostrar_indicador(datos, origen)
+    except Exception:
+        print("No se pudo obtener el indicador.")
+
 
 def menu_privado(usuario_actual):
     if usuario_actual is None:
@@ -67,4 +76,3 @@ def menu_privado(usuario_actual):
             consultar_indicador(usuario_actual)
         else:
             print("Opción no válida.")
-

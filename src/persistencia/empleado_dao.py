@@ -2,6 +2,15 @@ from persistencia.conexion import abrir_conexion, marcador_sql
 from dominio.empleado import Empleado
 
 
+def _a_iso(valor):
+    """Convierte date/datetime a string ISO; deja strings/None como están."""
+    if valor is None:
+        return None
+    if hasattr(valor, "isoformat"):
+        return valor.isoformat()
+    return valor
+
+
 class EmpleadoDAO:
 
     @staticmethod
@@ -18,14 +27,25 @@ class EmpleadoDAO:
             conexion = abrir_conexion()
             cursor = conexion.cursor()
             marca = marcador_sql()
-            sql = ("INSERT INTO empleado "
-                   "(nombre, direccion, numero, correo, fecha_contrato, salario, cargo) "
-                   f"VALUES ({marca}, {marca}, {marca}, {marca}, {marca}, {marca}, {marca})")
-            cursor.execute(sql, (empleado._nombre, empleado._direccion, empleado._numero,
-                                 empleado._correo, empleado._fecha_contrato,
-                                 empleado._salario, empleado._cargo))
+            fecha_iso = _a_iso(empleado._fecha_contrato)
+            if empleado._id is not None:
+                sql = ("INSERT INTO empleado "
+                       "(id, nombre, direccion, numero, correo, fecha_contrato, salario, cargo) "
+                       f"VALUES ({marca}, {marca}, {marca}, {marca}, {marca}, {marca}, {marca}, {marca})")
+                cursor.execute(sql, (empleado._id, empleado._nombre, empleado._direccion,
+                                     empleado._numero, empleado._correo, fecha_iso,
+                                     empleado._salario, empleado._cargo))
+            else:
+                sql = ("INSERT INTO empleado "
+                       "(nombre, direccion, numero, correo, fecha_contrato, salario, cargo) "
+                       f"VALUES ({marca}, {marca}, {marca}, {marca}, {marca}, {marca}, {marca})")
+                cursor.execute(sql, (empleado._nombre, empleado._direccion,
+                                     empleado._numero, empleado._correo, fecha_iso,
+                                     empleado._salario, empleado._cargo))
+                empleado._id = cursor.lastrowid
             conexion.commit()
-            empleado._id = cursor.lastrowid
+            if empleado._id is None:
+                empleado._id = cursor.lastrowid
             return empleado
         except Exception:
             if conexion:
@@ -47,7 +67,7 @@ class EmpleadoDAO:
                    f"correo = {marca}, fecha_contrato = {marca}, "
                    f"salario = {marca}, cargo = {marca} WHERE id = {marca}")
             cursor.execute(sql, (empleado._nombre, empleado._direccion, empleado._numero,
-                                 empleado._correo, empleado._fecha_contrato,
+                                 empleado._correo, _a_iso(empleado._fecha_contrato),
                                  empleado._salario, empleado._cargo, empleado._id))
             actualizado = cursor.rowcount > 0
             conexion.commit()

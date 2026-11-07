@@ -70,6 +70,14 @@ def crear_tablas():
                     id_empleado INTEGER NOT NULL UNIQUE,
                     permisos TEXT DEFAULT '[]',
                     FOREIGN KEY (id_empleado) REFERENCES empleado(id)
+                )""",
+                """CREATE TABLE IF NOT EXISTS indicador_api (
+                    fuente TEXT NOT NULL,
+                    codigo TEXT NOT NULL,
+                    fecha TEXT NOT NULL,
+                    valor REAL NOT NULL,
+                    unidad TEXT NOT NULL,
+                    PRIMARY KEY (fuente, codigo, fecha)
                 )"""
             ]
         else:
@@ -136,6 +144,14 @@ def crear_tablas():
                     id_empleado INT NOT NULL UNIQUE,
                     permisos TEXT,
                     FOREIGN KEY (id_empleado) REFERENCES empleado(id)
+                )""",
+                """CREATE TABLE IF NOT EXISTS indicador_api (
+                    fuente VARCHAR(100) NOT NULL,
+                    codigo VARCHAR(50) NOT NULL,
+                    fecha DATE NOT NULL,
+                    valor DECIMAL(12, 2) NOT NULL,
+                    unidad VARCHAR(20) NOT NULL,
+                    PRIMARY KEY (fuente, codigo, fecha)
                 )"""
             ]
         for sql in tablas:
@@ -152,4 +168,4 @@ def crear_tablas():
 
 if __name__ == "__main__":
     crear_tablas()
-    print("Tablas de EcoTech preparadas correctamente.")
+    print("Tablas de EcoTech preparadas correctamente.")    

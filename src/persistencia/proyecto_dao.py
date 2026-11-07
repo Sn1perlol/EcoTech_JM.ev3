@@ -4,6 +4,14 @@ from dominio.registrotiempo import RegistroTiempo
 from persistencia.empleado_dao import EmpleadoDAO
 
 
+def _a_iso(valor):
+    if valor is None:
+        return None
+    if hasattr(valor, "isoformat"):
+        return valor.isoformat()
+    return valor
+
+
 class ProyectoDao:
 
     @staticmethod
@@ -40,10 +48,13 @@ class ProyectoDao:
                 if empleado is None:
                     empleado = EmpleadoDAO.buscar_por_id(fila_registro[4])
                 if empleado is not None:
+                    # Firma real: (empleado, proyecto, fecha, horas, descripcion, id_registro)
                     proyecto._registros_tiempo.append(RegistroTiempo(
-                        id_registro=fila_registro[0], horas_trabajadas=fila_registro[1],
-                        fecha_trabajada=fila_registro[2], descripcion_tarea=fila_registro[3],
-                        empleado=empleado, proyecto=proyecto
+                        empleado, proyecto,
+                        fila_registro[2],   # fecha_trabajada
+                        fila_registro[1],   # horas_trabajadas
+                        fila_registro[3],   # descripcion_tarea
+                        fila_registro[0],   # id_registro
                     ))
         finally:
             conexion.close()
@@ -59,8 +70,9 @@ class ProyectoDao:
             cursor.execute(
                 f"INSERT INTO proyecto (nombre, descripcion, fecha_inicio, fecha_fin, estado) "
                 f"VALUES ({marca}, {marca}, {marca}, {marca}, {marca})",
-                (proyecto._nombre, proyecto._descripcion, proyecto._fecha_inicio,
-                 proyecto._fecha_fin, proyecto._estado))
+                (proyecto._nombre, proyecto._descripcion,
+                 _a_iso(proyecto._fecha_inicio), _a_iso(proyecto._fecha_fin),
+                 proyecto._estado))
             conexion.commit()
             proyecto._id_proyecto = cursor.lastrowid
             return proyecto
@@ -83,8 +95,9 @@ class ProyectoDao:
                 f"UPDATE proyecto SET nombre = {marca}, descripcion = {marca}, "
                 f"fecha_inicio = {marca}, fecha_fin = {marca}, estado = {marca} "
                 f"WHERE id = {marca}",
-                (proyecto._nombre, proyecto._descripcion, proyecto._fecha_inicio,
-                 proyecto._fecha_fin, proyecto._estado, proyecto._id_proyecto))
+                (proyecto._nombre, proyecto._descripcion,
+                 _a_iso(proyecto._fecha_inicio), _a_iso(proyecto._fecha_fin),
+                 proyecto._estado, proyecto._id_proyecto))
             actualizado = cursor.rowcount > 0
             conexion.commit()
             return actualizado

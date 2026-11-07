@@ -19,7 +19,7 @@ class Usuario:
         self._mail = mail
         self._empleado = id_empleado
         self._permisos = []
-        self._contrasenia_hash = self._crear_hash(contrasenia)
+        self._contrasenia_hash = self._crear_hash(self.validar_clave(contrasenia))
 
     @property
     def id_usuario(self):
@@ -55,7 +55,9 @@ class Usuario:
     def cambiar_contrasenia(self, contrasenia_actual, contrasenia_nueva):
         if not self.autenticar(contrasenia_actual):
             return False
-        if not contrasenia_nueva or len(contrasenia_nueva) < self.MIN_CLAVE:
+        try:
+            self.validar_clave(contrasenia_nueva)
+        except (TypeError, ValueError):
             return False
         if contrasenia_actual == contrasenia_nueva:
             return False
@@ -73,6 +75,12 @@ class Usuario:
             return False
         self._permisos.append(permiso)
         return True
+
+    @classmethod
+    def validar_clave(cls, contrasenia):
+        if not isinstance(contrasenia, str) or len(contrasenia) < cls.MIN_CLAVE:
+            raise ValueError(f"La contraseña debe tener al menos {cls.MIN_CLAVE} caracteres.")
+        return contrasenia
 
     @classmethod
     def normalizar_usuario(cls, nombre):

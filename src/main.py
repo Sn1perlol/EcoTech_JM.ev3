@@ -11,20 +11,20 @@ for ruta in [directorio_actual, directorio_raiz]:
 
 from persistencia.crear_bd import crear_tablas
 from persistencia.usuario_dao import UsuarioDAO
-from persistencia.semilla_db import poblar_base_datos
+from persistencia.semilla import poblar_base_datos
 
 from complementos.complementos import limpiar_pantalla
-from dominio.gestion_departamento import GestionDepartamento
+from dominio.gestion_departamentos import GestionDepartamento
 from dominio.gestion_permisos import GestionPermisos
 
-from menus.menu_dominio_departamento import menu_dominio_departamento
-from menus.menu_dominio_empleado import main_empleado
-from menus.menu_dominio_gestion_departamento import menu_dominio_gestionDepartamento
-from menus.menu_dominio_gestion_permisos import menu_dominio_gestionPermisos
-from menus.menu_dominio_proyecto import main_proyecto
-from menus.menu_dominio_registro_tiempo import menu_dominio_registro_tiempo
-from menus.menu_dominio_usuario import menu_dominio_usuario
-from menus.menu_gestion_admin import menu_gestion_admin
+from menus.menu_dominiodepartamento import menu_dominio_departamento
+from menus.menu_dominioempleado import main_empleado
+from menus.menu_dominiogestiondepartamento import menu_dominio_gestionDepartamento
+from menus.menu_gestionpermisos import menu_dominio_gestionPermisos
+from menus.menu_dominioproyecto import main_proyecto
+from menus.menu_dominioregistrotiempo import menu_dominio_registro_tiempo
+from menus.menu_dominiousuario import menu_dominio_usuario
+from menus.menu_gestionadmin import menu_gestion_admin
 from menus.menu_api import menu_api
 
 

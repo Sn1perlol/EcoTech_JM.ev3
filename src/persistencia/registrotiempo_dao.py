@@ -4,6 +4,14 @@ from persistencia.empleado_dao import EmpleadoDAO
 from persistencia.proyecto_dao import ProyectoDao
 
 
+def _a_iso(valor):
+    if valor is None:
+        return None
+    if hasattr(valor, "isoformat"):
+        return valor.isoformat()
+    return valor
+
+
 class RegistroTiempoDAO:
 
     @staticmethod
@@ -29,19 +37,23 @@ class RegistroTiempoDAO:
         proyecto = ProyectoDao.buscar_por_id(fila[5], cargar_relaciones=False)
         if empleado is None or proyecto is None:
             raise ValueError("El registro tiene un empleado o proyecto inexistente")
+        # Firma real: (empleado, proyecto, fecha, horas, descripcion, id_registro)
         return RegistroTiempo(
-            id_registro=fila[0], horas_trabajadas=fila[1], fecha_trabajada=fila[2],
-            descripcion_tarea=fila[3], empleado=empleado, proyecto=proyecto
+            empleado, proyecto,
+            fila[2],   # fecha_trabajada
+            fila[1],   # horas_trabajadas
+            fila[3],   # descripcion_tarea
+            fila[0],   # id_registro
         )
 
     @staticmethod
     def insertar(registroTiempo):
         if registroTiempo._empleado is None or registroTiempo._proyecto is None:
-            return False
+            raise ValueError("El registro debe tener empleado y proyecto.")
         if registroTiempo._empleado._id is None or registroTiempo._proyecto._id_proyecto is None:
-            return False
+            raise ValueError("Empleado y proyecto deben estar guardados en la BD.")
         if registroTiempo._horas_trabajadas <= 0:
-            return False
+            raise ValueError("Las horas deben ser mayores que cero.")
         conexion = None
         try:
             conexion = abrir_conexion()
@@ -50,13 +62,15 @@ class RegistroTiempoDAO:
             if not RegistroTiempoDAO._asignacion_valida(
                     cursor, marca, registroTiempo._empleado._id,
                     registroTiempo._proyecto._id_proyecto):
-                return False
+                raise ValueError("El empleado no está asignado a ese proyecto.")
             cursor.execute(
                 "INSERT INTO registro_tiempo "
                 "(horas_trabajadas, fecha_trabajada, descripcion_tarea, empleado_id, proyecto_id) "
                 f"VALUES ({marca}, {marca}, {marca}, {marca}, {marca})",
-                (registroTiempo._horas_trabajadas, registroTiempo._fecha_trabajada,
-                 registroTiempo._descripcion_tarea, registroTiempo._empleado._id,
+                (registroTiempo._horas_trabajadas,
+                 _a_iso(registroTiempo._fecha_trabajada),
+                 registroTiempo._descripcion_tarea,
+                 registroTiempo._empleado._id,
                  registroTiempo._proyecto._id_proyecto))
             conexion.commit()
             registroTiempo._id_registro = cursor.lastrowid
@@ -72,11 +86,11 @@ class RegistroTiempoDAO:
     @staticmethod
     def actualizar(registroTiempo):
         if registroTiempo._empleado is None or registroTiempo._proyecto is None:
-            return False
+            raise ValueError("El registro debe tener empleado y proyecto.")
         if registroTiempo._empleado._id is None or registroTiempo._proyecto._id_proyecto is None:
-            return False
+            raise ValueError("Empleado y proyecto deben estar guardados en la BD.")
         if registroTiempo._horas_trabajadas <= 0:
-            return False
+            raise ValueError("Las horas deben ser mayores que cero.")
         conexion = None
         try:
             conexion = abrir_conexion()
@@ -85,15 +99,18 @@ class RegistroTiempoDAO:
             if not RegistroTiempoDAO._asignacion_valida(
                     cursor, marca, registroTiempo._empleado._id,
                     registroTiempo._proyecto._id_proyecto):
-                return False
+                raise ValueError("El empleado no está asignado a ese proyecto.")
             cursor.execute(
                 "UPDATE registro_tiempo SET "
                 f"horas_trabajadas = {marca}, fecha_trabajada = {marca}, "
                 f"descripcion_tarea = {marca}, empleado_id = {marca}, "
                 f"proyecto_id = {marca} WHERE id = {marca}",
-                (registroTiempo._horas_trabajadas, registroTiempo._fecha_trabajada,
-                 registroTiempo._descripcion_tarea, registroTiempo._empleado._id,
-                 registroTiempo._proyecto._id_proyecto, registroTiempo._id_registro))
+                (registroTiempo._horas_trabajadas,
+                 _a_iso(registroTiempo._fecha_trabajada),
+                 registroTiempo._descripcion_tarea,
+                 registroTiempo._empleado._id,
+                 registroTiempo._proyecto._id_proyecto,
+                 registroTiempo._id_registro))
             actualizado = cursor.rowcount > 0
             conexion.commit()
             return actualizado
